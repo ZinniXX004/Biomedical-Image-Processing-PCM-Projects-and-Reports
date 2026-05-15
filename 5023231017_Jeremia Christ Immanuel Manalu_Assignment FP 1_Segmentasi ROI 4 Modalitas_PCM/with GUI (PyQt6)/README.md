@@ -44,7 +44,7 @@ Ensure your environment is running Python 3.8+ before initializing the sequence.
 
 ```bash
 # 1. Clone the repository
-$git clone [https://github.com/BioLensBME/Medical-Imaging-Suite.git$](https://github.com/BioLensBME/Medical-Imaging-Suite.git$) cd Medical-Imaging-Suite
+$git clone [https://github.com/ZinniXX004/Biomedical-Image-Processing-PCM-Projects-and-Reports.git$](https://github.com/ZinniXX004/Biomedical-Image-Processing-PCM-Projects-and-Reports.git$) cd "5023231017_Jeremia Christ Immanuel Manalu_Assignment FP 1_Segmentasi ROI 4 Modalitas_PCM/with GUI (PyQt6)"
 
 # 2. Deploy dependencies
 $ pip install -r requirements.txt
