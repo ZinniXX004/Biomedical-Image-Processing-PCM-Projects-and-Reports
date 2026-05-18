@@ -69,7 +69,7 @@ STAGE_COLORS = {
     "restoration":   "#4f94bc",
     "canny":         "#FF8C8C",   # soft red  — Canny tab
     "sharpening":    "#72E8A0",   # mint      — Sharpening tab
-    "comparison":    "#FFD27B",   # amber     — Runtime & Comparison tab
+    "comparison":    "#FFD27B",   # amber     — Runtime and Comparison tab
 }
 
 # 4-direction colormap for Canny angle quantization
@@ -225,7 +225,7 @@ def compute_pipeline(gray, method, sigma, thr, enh_method="CLAHE", clahe_clip=0.
     else: 
         enhanced = acq.copy()
 
-    # 2. Restoration / Denoising (Using our manual mathematical Gaussian)
+    # 2. Restoration / Denoising (Using manual mathematical Gaussian)
     denoised = manual_gaussian_filter(enhanced, sigma=sigma) 
     morpho_pre = closing(denoised, disk(1))
 
@@ -288,7 +288,7 @@ def compute_enhancement_metrics(reference: np.ndarray, enhanced: np.ndarray) -> 
     return {"RMSE": rmse, "PSNR": psnr, "SSIM": ssim, "Entropy": entropy}
 
 
-# ─── Week 10: Canny Edge Detection (from scratch) ────────────────────────────
+# Canny Edge Detection (from scratch)
 
 def _digitize_angle(angle_deg: np.ndarray) -> np.ndarray:
     """
@@ -379,7 +379,6 @@ def canny_scratch(gray: np.ndarray, sigma: float = 1.0,
     Follows lecture Week 10 step-by-step methodology.
 
     Parameters
-    ----------
     gray  : float64 grayscale image [0,1]
     sigma : Gaussian σ for smoothing
     t_lo  : low threshold  (fraction of max gradient magnitude)
@@ -389,10 +388,10 @@ def canny_scratch(gray: np.ndarray, sigma: float = 1.0,
     """
     t0 = time.perf_counter()
 
-    # ── Step 1: Gaussian smoothing  Ī = I * H^{G,σ} ─────────────────────────
+    # Step 1: Gaussian smoothing  Ī = I * H^{G,σ}
     smoothed = manual_gaussian_filter(gray, sigma)
 
-    # ── Step 2: Gaussian gradient kernels  (analytic derivatives) ────────────
+    # Step 2: Gaussian gradient kernels  (analytic derivatives)
     # Īx = -(x/σ²) · exp(-(x²+y²)/σ²)
     # Īy = -(y/σ²) · exp(-(x²+y²)/σ²)
     k  = max(1, int(np.ceil(3.0 * sigma)))
@@ -405,15 +404,15 @@ def canny_scratch(gray: np.ndarray, sigma: float = 1.0,
     fx = manual_convolve2d(smoothed, gx_kernel)
     fy = manual_convolve2d(smoothed, gy_kernel)
 
-    # ── Step 3: Gradient magnitude  Emag = √(fx² + fy²) ─────────────────────
+    # Step 3: Gradient magnitude  Emag = √(fx² + fy²)
     mag     = np.hypot(fx, fy)
     mag_max = mag.max() + 1e-9
     mag_norm = mag / mag_max
 
-    # ── Step 4: Gradient direction  Φ(u,v) = arctan2(Iy, Ix) + 180 ──────────
+    # Step 4: Gradient direction  Φ(u,v) = arctan2(Iy, Ix) + 180
     angle_deg = np.rad2deg(np.arctan2(fy, fx)) + 180.0   # → [0°, 360°)
 
-    # ── Step 5: Digitize angle → 4 directions ────────────────────────────────
+    # Step 5: Digitize angle → 4 directions
     quantized = _digitize_angle(angle_deg)
 
     # Color visualization: one RGB channel per direction (like the lecture slide)
@@ -425,16 +424,16 @@ def canny_scratch(gray: np.ndarray, sigma: float = 1.0,
     color_rgb[edge_mask & (quantized == 3), 0] = 255                      # yellow
     color_rgb[edge_mask & (quantized == 3), 1] = 255
 
-    # ── Step 6: Non-Maximum Suppression ──────────────────────────────────────
+    # Step 6: Non-Maximum Suppression 
     nms      = _non_max_suppression(quantized, mag)
     nms_norm = nms / mag_max
 
-    # ── Step 7: Double Thresholding ───────────────────────────────────────────
+    #Step 7: Double Thresholding 
     t_hi_abs = t_hi * mag_max
     t_lo_abs = t_lo * mag_max
     double_thresh = _double_threshold(nms, t_lo_abs, t_hi_abs)
 
-    # ── Step 8: Hysteresis Edge Tracking ─────────────────────────────────────
+    # Step 8: Hysteresis Edge Tracking
     final_edges = _hysteresis(double_thresh)
 
     elapsed = (time.perf_counter() - t0) * 1000
@@ -473,7 +472,7 @@ def canny_library(gray: np.ndarray, sigma: float = 1.0,
     )
 
 
-# ─── Week 10: Image Sharpening ───────────────────────────────────────────────
+# Image Sharpening
 
 def laplacian_sharpening(gray: np.ndarray,
                           weight: float = 1.0,
@@ -559,7 +558,7 @@ def compute_all_methods(gray, sigma, thr, canny_sigma, canny_tlo, canny_thi,
     """
     Run ALL edge detection + sharpening methods and return
     {method_name: {"edge": ndarray, "elapsed": float}}.
-    Used by the Runtime & Comparison tab.
+    Used by the Runtime and Comparison tab.
     """
     results = {}
     for m in ["Prewitt", "Sobel", "Roberts", "Extended Sobel", "Kirsch"]:
@@ -886,8 +885,6 @@ class AnalysisPanel(QWidget):
         self.fig.subplots_adjust(left=0.08, right=0.97, top=0.88, bottom=0.12, hspace=0.65, wspace=0.35)
         self.canvas.draw_idle()
 
-    # ── NEW Week-10 analysis methods ──────────────────────────────────────────
-
     def show_runtime_bars(self, runtimes_dict: dict) -> None:
         """Horizontal bar chart comparing method runtimes (green/orange/red)."""
         ax = self._fresh_ax()
@@ -1033,7 +1030,7 @@ class MainWindow(QMainWindow):
         self.cs_low         = 2.0
         self.cs_high        = 98.0
 
-        # ── Week 10: Canny + Sharpening state ────────────────────────────────
+        # Canny + Sharpening state
         self.canny_sigma  = 1.0
         self.canny_t_lo   = 0.05
         self.canny_t_hi   = 0.15
@@ -1592,9 +1589,7 @@ class MainWindow(QMainWindow):
         layout.addStretch()
         return scroll
 
-    # ═══════════════════════════════════════════════════════════════════════
-    # ─── TAB 6: CANNY EDGE DETECTION ───────────────────────────────────
-    # ═══════════════════════════════════════════════════════════════════════
+    # TAB 6: CANNY EDGE DETECTION
     def _build_tab_canny(self) -> QScrollArea:
         scroll, layout = self._scroll_tab()
 
@@ -1603,7 +1598,7 @@ class MainWindow(QMainWindow):
             "Manual from-scratch implementation + skimage library comparison",
             STAGE_COLORS["canny"]))
 
-        # ── Inline parameter controls ──────────────────────────────────────
+        # Inline parameter controls
         ctrl = QWidget()
         ctrl.setStyleSheet("background:transparent;")
         cl = QHBoxLayout(ctrl)
@@ -1636,7 +1631,7 @@ class MainWindow(QMainWindow):
         cl.addWidget(info_c, 1)
         layout.addWidget(ctrl)
 
-        # ── Pre-processing row ─────────────────────────────────────────────
+        # Pre-processing row
         layout.addWidget(self._section_header(
             "  PRE-PROCESSING: Gaussian Smoothing + Gaussian Gradient",
             "Ī = I * H^{G,σ}  →  Īx = ∂H/∂x   Īy = ∂H/∂y",
@@ -1651,7 +1646,7 @@ class MainWindow(QMainWindow):
             self.panels["canny_fy"],     self.panels["canny_mag"],
         ]))
 
-        # ── Edge Localization + Hysteresis row ────────────────────────────
+        # Edge Localization + Hysteresis row
         layout.addWidget(self._section_header(
             "  EDGE LOCALIZATION + HYSTERESIS THRESHOLDING",
             "Φ(u,v)=arctan2(Iy,Ix) → Digitize → NMS → Double threshold → Hysteresis",
@@ -1673,7 +1668,7 @@ class MainWindow(QMainWindow):
             self.panels["canny_hys"],
         ]))
 
-        # ── Library Canny ──────────────────────────────────────────────────
+        # Library Canny
         layout.addWidget(self._section_header(
             "  CANNY (LIBRARY: skimage.feature.canny)",
             "Same σ / lo / hi thresholds applied via optimised library implementation",
@@ -1690,10 +1685,8 @@ class MainWindow(QMainWindow):
 
         layout.addStretch()
         return scroll
-
-    # ═══════════════════════════════════════════════════════════════════════
-    # ─── TAB 7: IMAGE SHARPENING ────────────────────────────────────────
-    # ═══════════════════════════════════════════════════════════════════════
+    
+    # TAB 7: IMAGE SHARPENING
     def _build_tab_sharpening(self) -> QScrollArea:
         scroll, layout = self._scroll_tab()
 
@@ -1702,7 +1695,7 @@ class MainWindow(QMainWindow):
             "Laplacian Operator  I' = I − w·(H^L * I)   ·   Unsharp Masking  I' = I + a·(I − blur)",
             STAGE_COLORS["sharpening"]))
 
-        # ── Controls ───────────────────────────────────────────────────────
+        # Controls
         ctrl = QWidget()
         ctrl.setStyleSheet("background:transparent;")
         cl = QHBoxLayout(ctrl)
@@ -1739,7 +1732,7 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(ctrl)
 
-        # ── Laplacian section ──────────────────────────────────────────────
+        # Laplacian section
         layout.addWidget(self._section_header(
             "  LAPLACIAN SHARPENING",
             "Separable: H_x=[1,-2,1]  H_y=[[1],[-2],[1]]  →  Full 2D kernel H^L",
@@ -1762,7 +1755,7 @@ class MainWindow(QMainWindow):
             self.panels["sharp_lap_full"], self.panels["sharp_full"],
         ]))
 
-        # ── Unsharp Masking section ────────────────────────────────────────
+        # Unsharp Masking section
         layout.addWidget(self._section_header(
             "  UNSHARP MASKING (USM)",
             "M = I − blur(I, σ)   →   I' = I + a · M",
@@ -1781,9 +1774,7 @@ class MainWindow(QMainWindow):
         layout.addStretch()
         return scroll
 
-    # ═══════════════════════════════════════════════════════════════════════
-    # ─── TAB 8: RUNTIME & COMPARISON ────────────────────────────────────
-    # ═══════════════════════════════════════════════════════════════════════
+    # TAB 8: RUNTIME & COMPARISON
     def _build_tab_runtime_comparison(self) -> QScrollArea:
         scroll, layout = self._scroll_tab()
 
@@ -1804,7 +1795,7 @@ class MainWindow(QMainWindow):
         btn_run.clicked.connect(self._do_update_runtime)
         layout.addWidget(btn_run)
 
-        # ── Runtime bar chart ──────────────────────────────────────────────
+        # Runtime bar chart
         layout.addWidget(self._section_header(
             "  RUNTIME ANALYSIS",
             "Elapsed time per method (ms) — green=fast  orange=medium  red=slow",
@@ -1816,7 +1807,7 @@ class MainWindow(QMainWindow):
         self.analysis_panels["runtime_chart"].setMinimumHeight(360)
         layout.addWidget(self.analysis_panels["runtime_chart"])
 
-        # ── Edge detection grid ────────────────────────────────────────────
+        # Edge detection grid
         layout.addWidget(self._section_header(
             "  EDGE DETECTION COMPARISON",
             "Prewitt · Sobel · Roberts · Ext. Sobel · Kirsch · Canny Scratch · Canny Library",
@@ -1828,7 +1819,7 @@ class MainWindow(QMainWindow):
         self.analysis_panels["edge_compare_grid"].setMinimumHeight(480)
         layout.addWidget(self.analysis_panels["edge_compare_grid"])
 
-        # ── Sharpening comparison ──────────────────────────────────────────
+        # Sharpening comparison
         layout.addWidget(self._section_header(
             "  SHARPENING COMPARISON",
             "Original  ·  Laplacian Sharpened  ·  Unsharp Masking Result",
@@ -1861,7 +1852,7 @@ class MainWindow(QMainWindow):
                 self.gray_img = manual_rgb2gray(np.array(pil))
 
             self.image_name = os.path.basename(path)
-            # Reset week-10 caches so new image re-triggers computation
+            # Reset caches so new image re-triggers computation
             self._last_canny_scratch  = None
             self._last_canny_lib      = None
             self._last_sharpening_lap = None
@@ -1904,7 +1895,7 @@ class MainWindow(QMainWindow):
     def _update(self):
         self._debounce.start(180)
 
-    # ── Week 10 slider callbacks ───────────────────────────────────────────
+    # Slider callbacks
     def _canny_sigma_changed(self, val: int):
         self.canny_sigma = val / 10.0
         self.canny_sigma_lbl.setText(f"σ = {self.canny_sigma:.1f}")
@@ -1941,14 +1932,14 @@ class MainWindow(QMainWindow):
         self.usm_sigma_lbl.setText(f"σ = {self.usm_sigma:.1f}")
         self._sharp_debounce.start(350)
 
-    # ── Week 10 update methods ─────────────────────────────────────────────
+    # Update methods
     def _do_update_canny(self):
         """Compute Canny from scratch + library and refresh Tab 6 panels."""
         if self.gray_img is None:
             return
         try:
             gray = self.gray_img
-            # ── From scratch ─────────────────────────────────────────────
+            # From scratch
             sc = canny_scratch(gray, self.canny_sigma, self.canny_t_lo, self.canny_t_hi)
             self._last_canny_scratch = sc
 
@@ -1965,7 +1956,7 @@ class MainWindow(QMainWindow):
             self.panels["canny_thresh"].show_image(sc["double_thresh_disp"], "gray")
             self.panels["canny_hys"].show_image(sc["hysteresis"],        "gray")
 
-            # ── Library ─────────────────────────────────────────────────
+            # Library
             lib = canny_library(gray, self.canny_sigma, self.canny_t_lo, self.canny_t_hi)
             self._last_canny_lib = lib
 
@@ -1989,7 +1980,7 @@ class MainWindow(QMainWindow):
             return
         try:
             gray = self.gray_img
-            # ── Laplacian ────────────────────────────────────────────────
+            # Laplacian
             lap = laplacian_sharpening(gray, self.lap_weight, self.lap_kernel)
             self._last_sharpening_lap = lap
 
@@ -2001,7 +1992,7 @@ class MainWindow(QMainWindow):
             self.panels["sharp_lap_full"].show_image(lap["lap_full"], EDGE_CMAP)
             self.panels["sharp_full"].show_image(lap["sharp_full"],  "gray")
 
-            # ── Unsharp Masking ──────────────────────────────────────────
+            # Unsharp Masking
             usm = unsharp_masking(gray, self.usm_a, self.usm_sigma)
             self._last_sharpening_usm = usm
 
