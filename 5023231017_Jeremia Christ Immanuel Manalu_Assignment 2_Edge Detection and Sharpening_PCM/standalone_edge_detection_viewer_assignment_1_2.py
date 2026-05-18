@@ -229,7 +229,7 @@ def compute_pipeline(gray, method, sigma, thr, enh_method="CLAHE", clahe_clip=0.
     denoised = manual_gaussian_filter(enhanced, sigma=sigma) 
     morpho_pre = closing(denoised, disk(1))
 
-    # 3. Gradient Computation (Using our manual 2D convolution)
+    # 3. Gradient Computation (Using manual 2D convolution)
     img = morpho_pre
     if method == "Kirsch":
         responses =[manual_convolve2d(img, k) for k in KIRSCH_K.values()]
