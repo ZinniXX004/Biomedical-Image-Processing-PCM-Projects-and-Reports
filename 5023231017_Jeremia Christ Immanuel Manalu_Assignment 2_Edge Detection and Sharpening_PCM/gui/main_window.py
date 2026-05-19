@@ -73,9 +73,8 @@ class MainWindow(QMainWindow):
 
         self._load_default_image()
 
-        # Output Directory (naik 1 folder dari /gui ke root)
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        self.output_dir = os.path.join(base_dir, "..", "edge_outputs")
+        self.output_dir = os.path.join(base_dir, "..", "edge_and_sharpening_outputs")
         os.makedirs(self.output_dir, exist_ok=True)
 
         self._debounce = QTimer()

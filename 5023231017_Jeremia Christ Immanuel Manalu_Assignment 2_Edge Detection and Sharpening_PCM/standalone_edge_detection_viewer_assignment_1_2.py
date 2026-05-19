@@ -1048,7 +1048,7 @@ class MainWindow(QMainWindow):
 
         self._load_default_image()
 
-        self.output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "edge_outputs")
+        self.output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "edge_and_sharpening_outputs")
         os.makedirs(self.output_dir, exist_ok=True)
 
         self._debounce = QTimer()
