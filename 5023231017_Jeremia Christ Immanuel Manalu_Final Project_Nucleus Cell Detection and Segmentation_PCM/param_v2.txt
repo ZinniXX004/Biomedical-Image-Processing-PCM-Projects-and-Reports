@@ -1,0 +1,98 @@
+# VERSION 1
+  Mean IoU   : 0.129 
+  Mean Dice  : 0.21295 
+  Mean Time  : 0.6816 s
+
+
+# VERSION 2
+# CASE 1:
+IMAGE_NAMES = [
+    "TCGA-AR-A1AS-01Z-00-DX1",
+    "TCGA-AY-A8YK-01A-01-TS1",
+    "TCGA-E2-A1B5-01Z-00-DX1",
+    "TCGA-RD-A8N9-01A-01-TS1",
+]
+
+STAIN_MODE = "rgb2hed"          # change to "macenko" to enable adaptive
+
+THRESHOLD_MAP = {
+    "TCGA-AR-A1AS-01Z-00-DX1": "otsu",
+    "TCGA-AY-A8YK-01A-01-TS1": "percentile",   # ← dense nuclei: Otsu fails
+    "TCGA-E2-A1B5-01Z-00-DX1": "otsu",
+    "TCGA-RD-A8N9-01A-01-TS1": "otsu",
+}
+
+USE_WATERSHED = False
+
+PARAMS = {
+    # Preprocessing
+    "use_clahe"         : False, #default True
+    "clahe_clip_limit"  : 2.5, #default 2.5
+    "clahe_tile_size"   : (8, 8),  #default (8, 8)
+    "gaussian_ksize"    : (7, 7),   # [MOD-4] matches reference pipeline, default (5, 5)
+
+    # [MOD-4] morphology – 3×3, iterations=2  (from reference pipeline)
+    "morph_kernel_size" : 3, #default 3
+    "morph_iterations"  : 1, #default 2
+
+    # Size filtering
+    "min_area_px"       : 20, #default 50
+    "max_area_px"       : 80000, #default 6000
+
+    # Watershed (only used when USE_WATERSHED=True)
+    "peak_min_dist"     : 8,
+    "dist_thresh_frac"  : 0.28,
+}
+
+# Result (overall mean from the 4 images): 
+# Iou (Jaccard)=0.66424 -> Lowest=E2-A1B5 (0.5996) Highest=RD-A86N (0.7757),
+# Dice Similarity Coeeficient=0.796125 -> Lowest=E2-A1B5 (0.7497) Highest=RD-A86N (0.8737),
+# Running time=0.73785 -> Lowest=E2-A1B5 (0.4713) Highest=RD-A86N (0.9202)
+
+  Mean IoU   : 0.6632  (± 0.0815)
+  Mean Dice  : 0.7954  (± 0.0571)
+  Mean Time  : 0.8808 s
+
+# CASE 2:
+IMAGE_NAMES = [
+    "TCGA-AR-A1AS-01Z-00-DX1",
+    "TCGA-AY-A8YK-01A-01-TS1",
+    "TCGA-E2-A1B5-01Z-00-DX1",
+    "TCGA-RD-A8N9-01A-01-TS1",
+]
+
+STAIN_MODE = "rgb2hed"          # change to "macenko" to enable adaptive
+
+THRESHOLD_MAP = {
+    "TCGA-AR-A1AS-01Z-00-DX1": "otsu",
+    "TCGA-AY-A8YK-01A-01-TS1": "percentile",   # ← dense nuclei: Otsu fails
+    "TCGA-E2-A1B5-01Z-00-DX1": "otsu",
+    "TCGA-RD-A8N9-01A-01-TS1": "otsu",
+}
+
+USE_WATERSHED = False
+
+PARAMS = {
+    # Preprocessing
+    "use_clahe"         : False, #default True
+    "clahe_clip_limit"  : 2.5, #default 2.5
+    "clahe_tile_size"   : (8, 8),  #default (8, 8)
+    "gaussian_ksize"    : (7, 7),   # [MOD-4] matches reference pipeline, default (5, 5)
+
+    # [MOD-4] morphology – 3×3, iterations=2  (from reference pipeline)
+    "morph_kernel_size" : 3, #default 3
+    "morph_iterations"  : 1, #default 2
+
+    # Size filtering
+    "min_area_px"       : 20, #default 50
+    "max_area_px"       : 80000, #default 6000
+
+    # Watershed (only used when USE_WATERSHED=True)
+    "peak_min_dist"     : 8,
+    "dist_thresh_frac"  : 0.28,
+}
+
+# Result (overall mean from the 4 images): 
+# Iou (Jaccard)=0.66424 -> Lowest=E2-A1B5 (0.5996) Highest=RD-A86N (0.7757),
+# Dice Similarity Coeeficient=0.796125 -> Lowest=E2-A1B5 (0.7497) Highest=RD-A86N (0.8737),
+# Running time=0.73785 -> Lowest=E2-A1B5 (0.4713) Highest=RD-A86N (0.9202),
