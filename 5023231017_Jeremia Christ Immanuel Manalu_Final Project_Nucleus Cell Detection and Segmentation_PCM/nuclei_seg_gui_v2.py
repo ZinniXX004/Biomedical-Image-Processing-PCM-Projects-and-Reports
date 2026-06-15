@@ -6,13 +6,11 @@ PyQt6 + Matplotlib · Dark-Blue Theme · Version 2.1
 Usage:
     python nuclei_seg_gui.py
 
-Optionally place a file named  background.jpg / background.png
+Optionally place a file named  background.jpg/background.png
 in the same directory to enable the custom background feature.
 """
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  SECTION 1 · IMPORTS & RUNTIME SETUP
-# ─────────────────────────────────────────────────────────────────────────────
+#  SECTION 1 IMPORTS AND RUNTIME SETUP
 import sys, os, time, warnings, traceback
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -68,9 +66,7 @@ try:
 except Exception:
     pass
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  SECTION 2 · COLOUR PALETTE & STYLESHEET
-# ─────────────────────────────────────────────────────────────────────────────
+#  SECTION 2 COLOUR PALETTE AND STYLESHEET
 PAL = {
     "bg0":        "#050D1A",
     "bg1":        "#081526",
@@ -298,9 +294,7 @@ QLabel#sectionTitle { color:%(accent2)s; font-weight:700; font-size:12px;
 QLabel#imageTitle { color:%(accent4)s; font-weight:700; font-size:13px; }
 """ % PAL
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  SECTION 3 · PROCESSING FUNCTIONS  (from notebook — final versions)
-# ─────────────────────────────────────────────────────────────────────────────
+#  SECTION 3 PROCESSING FUNCTIONS  (from notebook, final versions)
 
 def load_image(img_path: Path) -> np.ndarray:
     """Load TIFF/image → uint8 RGB (H, W, 3)."""
@@ -511,9 +505,7 @@ def compute_metrics(pred: np.ndarray, gt: np.ndarray) -> dict:
     )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 #  DATA-COLLECTION functions (return arrays, NOT figures)
-# ─────────────────────────────────────────────────────────────────────────────
 
 def collect_stepwise_data(image_rgb, gt_mask, img_name, params,
                            threshold_map, percentile_map, stain_mode):
@@ -635,9 +627,7 @@ def collect_timing_data(image_rgb, img_name, params, threshold_map,
     return dict(stages=lbls, times_ms=vals_ms, total_ms=total, n_components=n_cc)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  SECTION 4 · FIGURE-CREATION FUNCTIONS  (return Figure objects)
-# ─────────────────────────────────────────────────────────────────────────────
+#  SECTION 4 FIGURE-CREATION FUNCTIONS  (return Figure objects)
 
 def _ax_off(ax):
     ax.set_xticks([]); ax.set_yticks([])
@@ -962,9 +952,7 @@ def create_cross_timing_figure(timing_results: dict) -> Figure:
     return fig
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  SECTION 5 · DEFAULT CONFIG
-# ─────────────────────────────────────────────────────────────────────────────
+#  SECTION 5 DEFAULT CONFIG
 DEFAULT_IMAGE_NAMES = [
     "TCGA-AR-A1AS-01Z-00-DX1",
     "TCGA-AY-A8YK-01A-01-TS1",
@@ -998,10 +986,7 @@ DEFAULT_PARAMS = {
     "dist_thresh_frac": 0.28,
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
 #  SECTION 6 · WORKER THREAD
-# ─────────────────────────────────────────────────────────────────────────────
-
 class ProcessingWorker(QThread):
     log        = pyqtSignal(str)
     progress   = pyqtSignal(int, int, str)    # current, total, status
@@ -1057,7 +1042,7 @@ class ProcessingWorker(QThread):
                 self.error.emit(f"Cannot parse annotation for {name}: {e}")
                 continue
 
-            # ── Histogram ──────────────────────────────────────────
+            # Histogram 
             try:
                 H_u8_raw, _ = get_h_channel(image, mode=cfg["stain_mode"])
                 self.hist_ready.emit(name, image.copy(), H_u8_raw.copy())
@@ -1065,14 +1050,14 @@ class ProcessingWorker(QThread):
             except Exception as e:
                 self.log.emit(f"  ✗ Histogram error: {e}")
 
-            # ── CLAHE diagnostic ───────────────────────────────────
+            # CLAHE diagnostic 
             try:
                 self.clahe_ready.emit(name, H_u8_raw.copy(), deepcopy(cfg["params"]))
                 self.log.emit("  ✓ CLAHE diagnostic data ready")
             except Exception as e:
                 self.log.emit(f"  ✗ CLAHE error: {e}")
 
-            # ── Step-wise diagnostic ───────────────────────────────
+            # Step-wise diagnostic 
             if cfg.get("run_diagnostics", True):
                 try:
                     step_data = collect_stepwise_data(
@@ -1083,7 +1068,7 @@ class ProcessingWorker(QThread):
                 except Exception as e:
                     self.log.emit(f"  ✗ Step analysis error: {e}\n{traceback.format_exc()}")
 
-            # ── Main segmentation ──────────────────────────────────
+            # Main segmentation
             try:
                 t0 = time.perf_counter()
                 pred_mask = segment_nuclei(
@@ -1103,7 +1088,7 @@ class ProcessingWorker(QThread):
                 self.error.emit(f"Segmentation failed for {name}: {e}")
                 continue
 
-            # ── Timing diagnostic ──────────────────────────────────
+            # Timing diagnostic
             try:
                 timing_data = collect_timing_data(
                     image, name, cfg["params"],
@@ -1133,10 +1118,7 @@ class ProcessingWorker(QThread):
         self.log.emit("\n✅  All images processed.")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 #  SECTION 7 · CUSTOM WIDGETS
-# ─────────────────────────────────────────────────────────────────────────────
-
 class MatplotlibCanvas(QWidget):
     """Matplotlib figure + NavigationToolbar inside a scroll area."""
 
@@ -1175,30 +1157,25 @@ class MatplotlibCanvas(QWidget):
         plt.close(self._fig)
         self._fig = fig
 
-        # ── New canvas for the new figure ────────────────────────
         self._canvas = FigureCanvas(fig)
         self._canvas.setSizePolicy(QSizePolicy.Policy.Expanding,
                                    QSizePolicy.Policy.Expanding)
 
-        # ── New toolbar linked to the new canvas ─────────────────
         new_toolbar = NavigationToolbar(self._canvas, self)
         new_toolbar.setFixedHeight(32)
         new_toolbar.setStyleSheet(
             f"background:{PAL['bg2']}; border:none;"
             f"border-bottom:1px solid {PAL['border2']};")
 
-        # ── Swap ONLY the toolbar at index 0 (do NOT touch scroll area) ──
         layout = self.layout()
         old_item = layout.takeAt(0)          # removes old toolbar only
         if old_item and old_item.widget():
-            old_item.widget().deleteLater()  # safe: only the toolbar is deleted
+            old_item.widget().deleteLater()  # only the toolbar is deleted
         layout.insertWidget(0, new_toolbar)  # re-insert new toolbar at index 0
         self._toolbar = new_toolbar
 
-        # ── Point scroll area at the new canvas (scroll area itself stays) ──
         self._scroll.setWidget(self._canvas)
 
-        # ── Resize canvas to match figure dimensions ──────────────
         w = int(fig.get_figwidth()  * fig.dpi)
         h = int(fig.get_figheight() * fig.dpi)
         self._canvas.setMinimumSize(w, h)
@@ -1217,11 +1194,7 @@ class MatplotlibCanvas(QWidget):
             sp.set_color(PAL["border2"])
         self._canvas.draw()
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 #  BACKGROUND CENTRAL WIDGET
-# ─────────────────────────────────────────────────────────────────────────────
-
 class BgCentralWidget(QWidget):
     """
     Central widget whose paintEvent draws the background image or a dark gradient.
@@ -1234,7 +1207,7 @@ class BgCentralWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._bg_pixmap = None
-        # Do NOT let QSS fill our background – we handle it in paintEvent
+
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, False)
 
     def set_bg_pixmap(self, px):
@@ -1253,7 +1226,7 @@ class BgCentralWidget(QWidget):
             x = (scaled.width()  - w) // 2
             y = (scaled.height() - h) // 2
             p.drawPixmap(0, 0, scaled, x, y, w, h)
-            # Darken overlay — alpha is kept lower so the image shows through clearly
+
             p.fillRect(0, 0, w, h, QColor(5, 13, 26, self._OVERLAY_ALPHA))
         else:
             grad = QLinearGradient(0, 0, w, h)
@@ -1373,11 +1346,7 @@ class MetricsBadge(QWidget):
             if k in metrics:
                 self._labels[short].setText(f"{short}: {metrics[k]:.4f}")
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-#  SECTION 8 · MAIN WINDOW
-# ─────────────────────────────────────────────────────────────────────────────
-
+#  SECTION 8 MAIN WINDOW
 class NucleiSegApp(QMainWindow):
 
     def __init__(self):
@@ -1393,10 +1362,6 @@ class NucleiSegApp(QMainWindow):
         self._canvases  = {}   # key → MatplotlibCanvas
         self._badges    = {}   # image_name → MetricsBadge
 
-        # ── Central widget — paints background image in paintEvent ──
-        # Using BgCentralWidget + WA_TranslucentBackground on child
-        # containers gives a true glass effect: rgba() QSS backgrounds
-        # composite against the painted background image.
         self._central = BgCentralWidget()
         self.setCentralWidget(self._central)
         # Enable DWM compositing on Windows so child rgba backgrounds work
@@ -1406,7 +1371,7 @@ class NucleiSegApp(QMainWindow):
         main_hl.setContentsMargins(0, 0, 0, 0)
         main_hl.setSpacing(0)
 
-        # ── Sidebar ───────────────────────────────────────────────
+        # Sidebar
         sidebar_scroll = QScrollArea()
         sidebar_scroll.setWidgetResizable(True)
         sidebar_scroll.setFixedWidth(330)
@@ -1419,7 +1384,7 @@ class NucleiSegApp(QMainWindow):
             "}")
         sidebar_scroll.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         sidebar_inner = QWidget()
-        # Inner widget is fully transparent — sections paint their own bg
+        # Inner widget is fully transparent, sections paint their own bg
         sidebar_inner.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         sidebar_inner.setStyleSheet("background: transparent;")
         sidebar_scroll.setWidget(sidebar_inner)
@@ -1430,7 +1395,7 @@ class NucleiSegApp(QMainWindow):
         self._build_sidebar()
         main_hl.addWidget(sidebar_scroll)
 
-        # ── Tab area ──────────────────────────────────────────────
+        # Tab area
         self._tabs = QTabWidget()
         self._tabs.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self._tabs.setStyleSheet(
@@ -1443,7 +1408,7 @@ class NucleiSegApp(QMainWindow):
         self._build_main_tabs()
         main_hl.addWidget(self._tabs, 1)
 
-        # ── Status bar ────────────────────────────────────────────
+        # Status bar
         self._status = QStatusBar()
         self.setStatusBar(self._status)
         self._prog = QProgressBar()
@@ -1452,12 +1417,9 @@ class NucleiSegApp(QMainWindow):
         self._status.addPermanentWidget(self._prog)
         self._set_status("Ready — configure dataset path and click ▶ Run Processing")
 
-        # Try loading background image
         self._try_load_bg()
 
-    # ─────────────────────────────────────────────────────────────
     #  SIDEBAR BUILD
-    # ─────────────────────────────────────────────────────────────
     def _build_sidebar(self):
         sl = self._sidebar_layout
 
@@ -1480,7 +1442,7 @@ class NucleiSegApp(QMainWindow):
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
         sl.addWidget(sub)
 
-        # ── Dataset ──────────────────────────────────────────────
+        # Dataset
         sec_ds = SidebarSection("📁  Dataset")
         self._le_base = QLineEdit("MoNuSeg2018")
         self._le_base.setPlaceholderText("Path to MoNuSeg2018 folder…")
@@ -1505,7 +1467,7 @@ class NucleiSegApp(QMainWindow):
         sec_ds.add_widget(row2)
         sl.addWidget(sec_ds)
 
-        # ── Stain extraction ──────────────────────────────────────
+        # Stain extraction
         sec_st = SidebarSection("🧪  Stain Extraction")
         self._cb_stain = QComboBox()
         self._cb_stain.addItems(["rgb2hed", "macenko", "manual"])
@@ -1516,7 +1478,7 @@ class NucleiSegApp(QMainWindow):
         sec_st.add_row("Mode:", self._cb_stain)
         sl.addWidget(sec_st)
 
-        # ── Per-image threshold ───────────────────────────────────
+        # Per-image threshold
         sec_thr = SidebarSection("🎯  Threshold Strategy")
         # Build sub-tabs for each image
         self._thr_tabs   = QTabWidget()
@@ -1559,7 +1521,7 @@ class NucleiSegApp(QMainWindow):
         sec_thr.add_widget(self._thr_tabs)
         sl.addWidget(sec_thr)
 
-        # ── CLAHE ─────────────────────────────────────────────────
+        # CLAHE
         sec_cl = SidebarSection("📡  CLAHE Enhancement")
         self._ck_clahe = QCheckBox("Enable CLAHE")
         self._ck_clahe.setChecked(True)
@@ -1576,7 +1538,7 @@ class NucleiSegApp(QMainWindow):
         sec_cl.add_row("Tile size:", tile_w)
         sl.addWidget(sec_cl)
 
-        # ── Gaussian blur ─────────────────────────────────────────
+        # Gaussian blur
         sec_gb = SidebarSection("🌀  Gaussian Blur")
         self._sp_gkern = QSpinBox()
         self._sp_gkern.setRange(1, 31); self._sp_gkern.setValue(5)
@@ -1585,7 +1547,7 @@ class NucleiSegApp(QMainWindow):
         sec_gb.add_row("Kernel size:", self._sp_gkern)
         sl.addWidget(sec_gb)
 
-        # ── Morphology ────────────────────────────────────────────
+        # Morphology
         sec_mo = SidebarSection("🔧  Morphology")
         self._sp_mks   = QSpinBox(); self._sp_mks.setRange(1, 15); self._sp_mks.setValue(3)
         self._sp_oi    = QSpinBox(); self._sp_oi.setRange(0, 10);  self._sp_oi.setValue(2)
@@ -1595,7 +1557,7 @@ class NucleiSegApp(QMainWindow):
         sec_mo.add_row("Close iters:", self._sp_ci)
         sl.addWidget(sec_mo)
 
-        # ── Size filter ───────────────────────────────────────────
+        # Size filter
         sec_sz = SidebarSection("🔍  Size Filter")
         self._sp_minA = QSpinBox();  self._sp_minA.setRange(1, 5000); self._sp_minA.setValue(20)
         self._sp_maxA = QSpinBox();  self._sp_maxA.setRange(100, 500000); self._sp_maxA.setValue(80000)
@@ -1603,7 +1565,7 @@ class NucleiSegApp(QMainWindow):
         sec_sz.add_row("Max area (px):", self._sp_maxA)
         sl.addWidget(sec_sz)
 
-        # ── Watershed ─────────────────────────────────────────────
+        # Watershed
         sec_ws = SidebarSection("💧  Watershed")
         self._ck_ws = QCheckBox("Enable Watershed  [MOD-3]")
         self._ck_ws.setChecked(False)
@@ -1615,7 +1577,7 @@ class NucleiSegApp(QMainWindow):
         sec_ws.add_row("Dist thresh:", self._sp_dtf)
         sl.addWidget(sec_ws)
 
-        # ── Diagnostics ───────────────────────────────────────────
+        # Diagnostics
         sec_diag = SidebarSection("📊  Diagnostics")
         self._ck_diag = QCheckBox("Run step-wise diagnostics")
         self._ck_diag.setChecked(True)
@@ -1624,7 +1586,7 @@ class NucleiSegApp(QMainWindow):
         sec_diag.add_row("Timing repeats:", self._sp_trep)
         sl.addWidget(sec_diag)
 
-        # ── Action buttons ────────────────────────────────────────
+        # Action buttons 
         sl.addSpacing(8)
         btn_run = QPushButton("▶  Run Processing")
         btn_run.setObjectName("btnRun")
@@ -1646,10 +1608,8 @@ class NucleiSegApp(QMainWindow):
             f"padding:4px 0; font-style:italic;")
         sl.addWidget(dev_lbl)
         sl.addStretch()
-
-    # ─────────────────────────────────────────────────────────────
+        
     #  MAIN TAB BUILD
-    # ─────────────────────────────────────────────────────────────
     def _build_main_tabs(self):
         self._tabs.clear()
         self._canvases.clear()
@@ -1693,7 +1653,7 @@ class NucleiSegApp(QMainWindow):
         ov_l.addWidget(self._prog_bar_ov)
         self._tabs.addTab(ov_w, "⚙  Overview")
 
-        # ── Tabs 1-5: Per-image analysis ─────────────────────────
+        # Tabs 1-5: Per-image analysis
         tab_defs = [
             ("📊  Histograms",     "hist"),
             ("📡  CLAHE",          "clahe"),
@@ -1766,7 +1726,7 @@ class NucleiSegApp(QMainWindow):
             outer_l.addWidget(sub_tabs)
             self._tabs.addTab(outer_w, tab_label)
 
-        # ── Tab 6: Results Summary ────────────────────────────────
+        # Tab 6: Results Summary
         sum_w = QWidget()
         sum_l = QVBoxLayout(sum_w)
         sum_l.setContentsMargins(6, 6, 6, 6)
@@ -1797,9 +1757,7 @@ class NucleiSegApp(QMainWindow):
         sum_l.addWidget(sum_tabs)
         self._tabs.addTab(sum_w, "🏆  Summary")
 
-    # ─────────────────────────────────────────────────────────────
     #  HELPERS
-    # ─────────────────────────────────────────────────────────────
     def _set_status(self, msg: str):
         self._status.showMessage(msg)
 
@@ -1868,9 +1826,7 @@ class NucleiSegApp(QMainWindow):
             "timing_repeats": self._sp_trep.value(),
         }
 
-    # ─────────────────────────────────────────────────────────────
-    #  RUN / WORKER SLOTS
-    # ─────────────────────────────────────────────────────────────
+    #  RUN/WORKER SLOTS
     def _on_run(self):
         if self._worker and self._worker.isRunning():
             self._worker.abort()
@@ -2070,9 +2026,7 @@ class NucleiSegApp(QMainWindow):
         self._prog_bar_ov.setValue(4)
         self._set_status(f"✓  Processing complete — {len(self._results)} image(s) processed")
 
-    # ─────────────────────────────────────────────────────────────
     #  SAVE CSV
-    # ─────────────────────────────────────────────────────────────
     def _on_save_csv(self):
         if not self._results:
             return
@@ -2090,10 +2044,7 @@ class NucleiSegApp(QMainWindow):
         plt.close("all")
         super().closeEvent(event)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 #  ENTRY POINT
-# ─────────────────────────────────────────────────────────────────────────────
 def main():
     app = QApplication(sys.argv)
     app.setStyleSheet(DARK_QSS)
