@@ -1,0 +1,9 @@
+[project]
+name = "modular-scripts-root"
+version = "0.1.0"
+description = "MoNuSeg 2018 Nuclei Segmentation GUI"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []
+[tool.setuptools]
+packages = ["core", "ui", "viz"]
